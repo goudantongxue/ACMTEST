@@ -1,6 +1,143 @@
 ﻿#include <bits/stdc++.h>
 using namespace std;
 
+namespace TemplateTest
+{
+
+}
+
+namespace IteratorTraits
+{
+	// For every iterator type, a corresponding specialization of iterator_traits class template shall be 
+	// defined, with at least the following member types defined :
+	// difference_type | value_type | pointer | reference | iterator_category 
+	// iterator_category includes follows : input_iterator_tag | output_iterator_tag | forward_iterator_tag | bidirectional_iterator_tag | random_access_iterator
+	int main()
+	{
+		using traits = std::iterator_traits<int*>;
+
+		if (typeid(traits::iterator_category) == typeid(std::random_access_iterator_tag))
+		{
+			cout << "int * is a random-access iterator";
+		}
+
+		return 0;
+	}
+}
+
+namespace RandomCPP
+{
+	void CRandomTest()
+	{
+		// Initialize the random seed
+		srand(time(nullptr));
+
+		// range of rand()
+		cout << "rand() function generate number from 0" << " to " << RAND_MAX << endl;
+
+		// generate number between a and b
+		int a = 4;
+		int b = 10;
+		int c = a + rand() % (b - a + 1);
+
+		cout << "We generate " << c << endl;
+	}
+
+
+	void CPPRandomTest(){
+		using my_engine = default_random_engine; // type of engine
+		//即使所有的模板参数都有默认值，我们仍然需要显式的加上<>，来表示这是一个类模板
+		using my_distribution = uniform_int_distribution<>; // type of distribution
+
+		constexpr int min = 0;
+		constexpr int max = 99;
+
+		// time_point -> duration -> count
+		unsigned seed = chrono::system_clock::now().time_since_epoch().count(); // Initialization Seed
+
+		my_engine re(seed); // instantiate engine with seed
+		my_distribution zero_to_five(min, max); // distribution that map to the ints 1..6
+
+		auto die = [&]() { return zero_to_five(re); }; // make a generator
+
+		// Display the result
+		vector<int> result(max-min+1, 0);
+
+		for (int i = 0; i < 1000; i++) {
+			result[die()]++;
+		}
+
+		auto printStar = [](int num) {
+			for (int i = 0; i < num; i++)
+			{
+				cout << '*';
+			}
+		};
+
+		for (int i = 0; i < result.size(); i++) {
+			printStar(result[i]);
+			cout << endl;
+		}
+	}
+
+
+
+	int main()
+	{
+		//CPPRandomTest();
+		//CRandomTest();
+
+		return 0;
+	}
+}
+
+namespace ChronoCPP
+{
+	// 对于任何的时间库，都有两个类型：time_point类型用于标识某一时刻的时间；duration类型，用于表示一段时间，两者之间可以进行转换
+	using namespace chrono;
+
+	void prog1() {
+
+		// time_point的类型是和 clock 捆绑的，而 duration 的类型由 rep 和 period 决定
+
+		// clock to time_point
+		time_point<high_resolution_clock> t0 = high_resolution_clock::now();
+
+		this_thread::sleep_for(seconds(3));
+
+		// clock to time_point
+		time_point<high_resolution_clock> t1 = high_resolution_clock::now();
+
+		// time_point to duration
+		duration<high_resolution_clock::rep, high_resolution_clock::period> d = t1 - t0;
+
+		// cast to seconds
+		seconds s = duration_cast<seconds>(t1 - t0);
+
+		cout << "We spend " << s.count() << " seconds" << endl;
+	}
+
+	void prog2() {
+		// the number of seconds since 00:00 hours, Jan 1, 1970 UTC
+		cout << time(nullptr) << endl;
+
+		// the number of nano seconds since 00:00 hours, Jan 1, 1970 UTC
+		duration<system_clock::rep, system_clock::period> d = chrono::system_clock::now().time_since_epoch();
+		
+		// cast the result to seconds
+		seconds dinSecs = duration_cast<seconds>(d);
+
+		cout << dinSecs.count() << endl;
+	}
+
+	int main()
+	{
+		//prog1();
+		prog2();
+		return 0;
+	}
+}
+
 namespace MonoStack
 {
 	void FindFirstHigh(vector<int>& vec)
@@ -310,6 +447,138 @@ namespace DFS
 
 		cout << "Point Number: " << result << endl;
 
+		return 0;
+	}
+}
+
+namespace BFSEXAMPLE
+{
+	// 定义我们所需的数据类型，一般包含节点的所有信息。
+	struct state_t
+	{
+		string word;
+		int level;
+
+		// 最好定义默认构造函数，尽管用不到。
+		state_t() = default;
+		state_t(string _word, int _level) : word(_word), level(_level) { }
+
+		// 一定要定义 operator== 运算符，hashtable 取得相应元素需要 operator== 验证是否相等
+		bool operator==(const state_t& other) const
+		{
+			return word == other.word;
+		}
+	};
+
+	// 为我们自定义的类型创建 hash 函数
+	struct stateHash
+	{
+	private:
+		std::hash<string> str_hash;
+
+	public:
+		size_t operator()(const state_t& state) const
+		{
+			return str_hash(state.word);
+		}
+	};
+
+	unordered_set<state_t, stateHash> ExtendChoice(const state_t& seed, const string& end, const unordered_set<string>& dict, unordered_set<state_t, stateHash>& visited, unordered_map<string, string>& mapParent)
+	{
+		unordered_set<state_t, stateHash> result;
+
+		string strSeed = seed.word;
+
+		for (size_t i = 0; i < strSeed.length(); i++)
+		{
+			for (char c = 'a'; c <= 'z'; c++)
+			{
+				if (c == strSeed[i])
+				{
+					continue;
+				}
+
+				swap(strSeed[i], c);
+
+				state_t tmpState(strSeed, seed.level + 1);
+
+				if ((dict.find(strSeed) != dict.end() || strSeed == end) && visited.find(tmpState) == visited.end())
+				{
+					result.insert(tmpState);
+					mapParent[strSeed] = seed.word;
+				}
+
+				swap(strSeed[i], c);
+			}
+		}
+
+		return result;
+	}
+
+	// 通过父子表（通常可以用数组进行记录，但在非数字节点中，需要通过 map 进行记录）， 寻找回去的路。
+	void FindPath(unordered_map<string, string>& mapParent, const string& strToFind, const string& begin)
+	{
+		if (strToFind != begin)
+		{
+			string strParent = mapParent[strToFind];
+			FindPath(mapParent, strParent, begin);
+		}
+
+		cout << strToFind << ' ';
+	}
+
+	// BFS
+	int WordLadder(const string& start, const string& end, const unordered_set<string>& dict)
+	{
+		queue<state_t> queueSearch;
+		unordered_set<state_t, stateHash> visited; // 第一个参数为`自定义数据类型`，第二个参数定义为`自定义数据类型的 hash function`
+		unordered_map<string, string> mapParent;
+
+		queueSearch.emplace(start, 0);
+		visited.emplace(start, 0);
+
+		auto state_is_target = [&](const state_t& state) { return state.word == end; };
+
+		while (!queueSearch.empty())
+		{
+			// 取节点
+			const state_t tmp = queueSearch.front();
+			queueSearch.pop();
+
+			// 如果遍历到了终点，记录并返回。
+			if (state_is_target(tmp))
+			{
+				FindPath(mapParent, tmp.word, start);
+				return tmp.level + 1;
+			}
+
+			// 扩展结点
+			unordered_set<state_t, stateHash> setPathChoices = ExtendChoice(tmp, end, dict, visited, mapParent);
+
+			for (const auto& s : setPathChoices)
+			{
+				queueSearch.push(s);
+				visited.insert(s);
+			}
+		}
+
+		return 0;
+	}
+
+	void UnitTestWordLadder()
+	{
+		string start = "hit";
+		string end = "cog";
+		unordered_set<string> dict{ "hot", "dot", "dog", "lot", "log" };
+
+		int ret = WordLadder(start, end, dict);
+
+		cout << endl << "From " << start << " to " << end << " needs " << ret << " steps" << endl;
+	}
+
+	int main()
+	{
+		UnitTestWordLadder();
 		return 0;
 	}
 }
@@ -943,24 +1212,6 @@ namespace BitsStream
 	}
 }
 
-namespace IteratorTraits
-{
-	// For every iterator type, a corresponding specialization of iterator_traits class template shall be 
-	// defined, with at least the following member types defined :
-	// difference_type | value_type | pointer | reference | iterator_category 
-	// iterator_category includes follows : input_iterator_tag | output_iterator_tag | forward_iterator_tag | bidirectional_iterator_tag | random_access_iterator
-	int main()
-	{
-		using traits = std::iterator_traits<int*>;
-
-		if (typeid(traits::iterator_category) == typeid(std::random_access_iterator_tag))
-		{
-			cout << "int * is a random-access iterator";
-		}
-
-		return 0;
-	}
-}
 
 namespace Hex2Base64
 {
@@ -978,9 +1229,9 @@ namespace Hex2Base64
 
 		for (int i = 0; i < 8; i++)
 		{
-			int mod = num % 2;
+			int mod = num & 1;
 			str.push_back('0' + mod);
-			num = num / 2;
+			num = num >> 1;
 		}
 
 		reverse(str.begin(), str.end());
@@ -1025,7 +1276,7 @@ namespace Hex2Base64
 		}
 		else
 		{
-			return '//';
+			return '/';
 		}
 	}
 
@@ -1060,9 +1311,23 @@ namespace Hex2Base64
 	{
 		string test1 = "1A";
 		hex2base64(test1);
+
 		return 0;
 	}
 }
+
+
+namespace SortAlgorithm
+{
+	void _quicksort(vector<int>& vec, int l, int r){
+
+	}
+
+	void QuickSort(vector<int>& vec, int l, int r) {
+
+	}
+}
+
 
 int main()
 {
@@ -1077,7 +1342,10 @@ int main()
 	//MinimumSpanningTree::main();
 	//ShortestPath::main();
 	//IteratorTraits::main();
-	Hex2Base64::main();
+	//Hex2Base64::main();
+	//RandomCPP::main();
+	//ChronoCPP::main();
+	BFSEXAMPLE::main();
 	return 0;
 
 }

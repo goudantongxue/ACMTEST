@@ -1328,6 +1328,109 @@ namespace SortAlgorithm
 	}
 }
 
+namespace MySingleton {
+
+	class Singleton {
+	private:
+		static std::atomic<Singleton*> _instance;
+		static std::mutex _mutex;
+		Singleton(string objflag) :objectIndicator_(objflag) {};
+
+	public:
+		string objectIndicator_;
+
+	public:
+		Singleton(const Singleton&) = delete;
+		Singleton& operator==(const Singleton&) = delete;
+
+		static Singleton* GetInstance(string val);
+	};
+
+	std::atomic<Singleton*> Singleton::_instance;
+	std::mutex Singleton::_mutex;
+
+	Singleton* Singleton::GetInstance(string val) {
+		Singleton* tmp = _instance.load(memory_order::memory_order_acquire);
+
+		if (tmp == nullptr)
+		{
+			std::lock_guard<std::mutex> lk(_mutex);
+			
+			tmp = _instance;
+
+			if (tmp == nullptr)
+			{
+				tmp = new Singleton(val);
+				_instance.store(tmp, memory_order::memory_order_release);
+			}
+		}
+
+		return tmp;
+	}
+
+	void threadFoo(string value)
+	{
+		this_thread::sleep_for(chrono::milliseconds(1000));
+		Singleton* val = Singleton::GetInstance(value);
+		cout << val->objectIndicator_ << endl;
+	}
+
+
+	int main()
+	{
+		std::thread t1(threadFoo, "ABC");
+		std::thread t2(threadFoo, "DEF");
+		std::thread t3(threadFoo, "GHI");
+
+		t1.join();
+		t2.join();
+		t3.join();
+
+		return 0;
+	}
+}
+
+namespace PrintLetterSequentially
+{
+	std::mutex lock;
+	std::condition_variable cond;
+	volatile int curid = 0;
+	const int gcount = 100;
+	const int range = 10;
+	void PrintLetter(int id)
+	{
+		for (int i = 0; i < gcount; i++ )
+		{
+			std::unique_lock<std::mutex> lck(lock);
+			while (id != curid)
+			{
+				cond.wait(lck);
+			}
+			cout << char('A' + id);
+
+			curid = (curid + 1) % range;
+
+			cond.notify_all();
+		}
+	}
+
+	int main()
+	{
+		std::vector<std::thread> threads;
+
+		for (int i = 0; i < range; i++)
+		{
+			threads.push_back(std::thread(PrintLetter, i));
+		}
+
+		for (auto& t : threads)
+		{
+			t.join();
+		}
+
+		return 0;
+	}
+}
 
 int main()
 {
@@ -1345,7 +1448,9 @@ int main()
 	//Hex2Base64::main();
 	//RandomCPP::main();
 	//ChronoCPP::main();
-	BFSEXAMPLE::main();
+	//BFSEXAMPLE::main();
+	//MySingleton::main();
+	PrintLetterSequentially::main();
 	return 0;
 
 }

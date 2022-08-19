@@ -1303,13 +1303,15 @@ namespace PlayCard
 		return 0;
 	}
 }
-// 
-/*
-* 100101000001001010000100101
-* 100101 00000100101 0000100101
-*/
+
 namespace BitsStream
 {
+	// 
+	/*
+	* 100101000001001010000100101
+	* 100101 00000100101 0000100101
+	*/
+
 	bool CompareBits(string& bitsString1, string& bitsString2)
 	{
 		int i = 0, j = 0;
@@ -1534,7 +1536,6 @@ namespace SortAlgorithm
 		}
 
 		ofs.close();
-		return 0;
 	}
 
 	int main()
@@ -1751,6 +1752,91 @@ namespace PascalTriangle
 	}
 }
 
+namespace FindMaxValEveryK
+{
+	vector<int> FindMaxEveryK(vector<int>& nums, int k)
+	{
+		priority_queue<pair<int, int> > pq;
+		vector<int> result;
+
+		for (int i = 0; i < k; i++)
+		{
+			pq.emplace(nums[i], i);
+		}
+
+		result.push_back(pq.top().first);
+
+		for (int i = k; i < nums.size(); i++)
+		{
+			pq.emplace(nums[i], i);
+
+			while (i - pq.top().second >= k)
+			{
+				pq.pop();
+			}
+
+			result.push_back(pq.top().first);
+		}
+
+		return result;
+	}
+
+	void testcase()
+	{
+		const int count = 20;
+		vector<int> nums(count);
+
+		uniform_int_distribution<> distri(0, 1000);
+		default_random_engine generator;
+
+		auto f = [&]() { return distri(generator); };
+
+		generate(nums.begin(), nums.end(), f);
+		
+		for (auto i : nums)
+		{
+			cout << i << ' ';
+		}
+		cout << endl;
+
+		random_shuffle(nums.begin(), nums.end());
+
+		for (auto i : nums)
+		{
+			cout << i << ' ';
+		}
+		cout << endl;
+
+		vector<int> ret = FindMaxEveryK(nums, 5);
+
+		for (auto i : ret)
+		{
+			cout << i << ' ';
+		}
+
+
+	}
+
+	int main()
+	{
+		testcase();
+		return 0;
+	}
+}
+
+namespace FORPRATICE
+{
+	// Practice makes perfect!!!
+
+
+	int main()
+	{
+
+		return 0;
+	}
+
+}
+
 int main()
 {
 	//Permutations::main();
@@ -1775,7 +1861,8 @@ int main()
 	//LRVALUE::main();
 	//AUTOTEST::main();
 	//CopyTest::main();
-	
+	//FindMaxValEveryK::main();
+	FORPRATICE::main();
 	return 0;
 
 }

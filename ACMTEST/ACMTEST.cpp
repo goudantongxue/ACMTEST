@@ -1329,6 +1329,86 @@ namespace SortAlgorithm
 }
 
 
+namespace HWTEST
+{
+	void allFixedLenSubsets(vector<int>& vec, vector<int>& path, vector<vector<int>>& result, int index, int fixedLen)
+	{
+		if (path.size() == fixedLen)
+		{
+			result.push_back(path);
+
+			return;
+		}
+
+
+		for (int i = index; i < vec.size(); i++)
+		{
+			path.push_back(vec[i]);
+			allFixedLenSubsets(vec, path, result, i + 1, fixedLen);
+			path.pop_back();
+		}
+	}
+
+
+	void allSubsets(vector<int>& vec, vector<int>& path, vector<vector<int> >& result,int index)
+	{
+		if (vec.size() == index)
+		{
+			result.push_back(path);
+			return;
+		}
+
+		allSubsets(vec, path, result, index + 1);
+
+		path.push_back(vec[index]);
+		allSubsets(vec, path, result, index + 1);
+		path.pop_back();
+
+	}
+
+	void allPermutations(vector<int>& vec)
+	{
+
+		do 
+		{
+			for (auto i : vec)
+			{
+				cout << i << ' ';
+			}
+
+			cout << endl;
+
+		} while (next_permutation(vec.begin(), vec.end()));
+
+	}
+
+	int main()
+	{
+		vector<int> vec{ 1, 2, 3 , 4 ,5};
+		//allPermutations(vec);
+		vector<int> path;
+		vector<vector<int>> result;
+
+		//allSubsets(vec, path, result, 0);
+
+		allFixedLenSubsets(vec, path, result, 0, 3);
+
+		cout << result.size() << endl;
+
+		for (auto& v : result)
+		{
+			for (auto i : v)
+			{
+				cout << i << ' ';
+			}
+			cout << endl;
+		}
+
+		return 0;
+	}
+
+}
+
 int main()
 {
 	//Permutations::main();
@@ -1345,7 +1425,9 @@ int main()
 	//Hex2Base64::main();
 	//RandomCPP::main();
 	//ChronoCPP::main();
-	BFSEXAMPLE::main();
+	//BFSEXAMPLE::main();
+	//HWTEST::main();
+
 	return 0;
 
 }

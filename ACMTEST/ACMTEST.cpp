@@ -330,6 +330,17 @@ namespace MonoStack
 
 namespace BFS
 {
+	/*
+	* 6 6 2 3 3
+	* 37 37 39 41 13 205
+	* 37 41 41 203 39 243
+	* 37 41 40 131 40 41
+	* 91 41 39 198 41 9
+	* 189 41 39 40 40 38
+	* 37 124 38 167 41 41
+	*/
+
+
 	// 是否为有向图
 	bool isDirected = false;
 
@@ -416,6 +427,7 @@ namespace BFS
 				int x = tmp.first + Options[i].first;
 				int y = tmp.second + Options[i].second;
 
+				// 凡是涉及到数组的索引一定要注意不要超出数组的范围
 				if (x < 0 || x >= rows || y < 0 || y >= cols)
 				{
 					continue;
@@ -736,6 +748,20 @@ namespace BFSEXAMPLE
 
 namespace MinimumSpanningTree
 {
+	// Graph Data 
+	//  0 1 5
+	//	0 2 9
+	//	0 3 7
+	//	1 2 7
+	//	1 6 12
+	//	2 3 4
+	//	2 5 3
+	//	2 6 4
+	//	3 4 5
+	//	3 5 2
+	//	4 5 2
+	//	5 6 7
+
 	struct GraphNode {
 		int _node;
 		int _weight;
@@ -1827,10 +1853,29 @@ namespace FindMaxValEveryK
 namespace FORPRATICE
 {
 	// Practice makes perfect!!!
+	void TestCase()
+	{
+		vector<int> vec{ 3, 4, 2 , 5, 7, 8,1 };
 
+		sort(vec.begin(), vec.end());
+
+		int count = 0;
+		do 
+		{
+			count++;
+			for (auto i : vec)
+			{
+				cout << i << ' ';
+			}
+			cout << endl;
+		} while (next_permutation(vec.begin(), vec.end()));
+
+		cout << "Totally " << count << " situations!" << endl;
+	}
 
 	int main()
 	{
+		TestCase();
 
 		return 0;
 	}
@@ -1841,7 +1886,7 @@ int main()
 {
 	//Permutations::main();
 	//FixedLenSet::main();
-	// BFS::main();
+	//BFS::main();
 	//DFS::main();
 	//MonoStack::main();
 	//stringManipulation::main();

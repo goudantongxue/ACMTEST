@@ -1,9 +1,100 @@
 ﻿#include <bits/stdc++.h>
 using namespace std;
 
-namespace TemplateTest
+namespace LRVALUE
 {
+	void overloaded(const int&);
+	void overloaded(int&&);
 
+	// 下面三个函数展示了左值右值引用设计的常用方法
+	// 第一个函数通常是中间函数，用于完美转发
+	// 转发的目的地就是第二个或者第三个函数，分别对用于左值引用的函数和右值引用的函数
+	template <class T> void fn(T&& x) {
+		overloaded(x);                   // always an lvalue
+		overloaded(std::forward<T>(x));  // rvalue if argument is rvalue
+	}
+
+	void overloaded(const int& x) { std::cout << "[lvalue]"; }
+	void overloaded(int&& x) { std::cout << "[rvalue]"; }
+
+	int main() {
+		// Effective Modern C++ 给出的判断一个表达式是否为左值的方法是：
+		// 看能否取得此表达式的地址：如果可以取得，则该表达式是左值；如果不可以，该表达式是右值。
+		int a;
+
+		std::cout << "calling fn with lvalue: ";
+		fn(a);
+		std::cout << '\n';
+
+		std::cout << "calling fn with rvalue: ";
+		fn(0);
+		std::cout << '\n';
+
+		return 0;
+	}
+}
+
+namespace AUTOTEST
+{
+	// More Effective C++ 提供的用编译器报错来推导类型的方法
+	//template<typename T>
+	//class TD;
+
+	//void TypeTest()
+	//{
+	//	const int theAnswer = 42;
+	//	auto x = theAnswer;
+	//	auto y = &theAnswer;
+
+	//	TD<decltype(x)> xType;
+	//	TD<decltype(y)> yType;
+	//}
+
+	/*
+	* 理解模板型别推导
+	* 在 <Effective Modern C++> 一书中，作者以如下模板形式作为示例
+	* 
+	* template<typename T>
+	* void f(ParamType param);
+	* f(expr);
+	* 
+	* 根据ParamType的类型，将模板型别推导分成了三种情况，分别是：
+	* 1. ParamType 具有指针或引用类型，但不是万能引用
+	* 2. ParamType 是一个万能引用
+	* 3. ParamType 既非指针也非引用
+	* 对于上述三种情况，规则分别如下：
+	* 1. 若 expr 具有引用类型，则先将其引用部分忽略；尔后， 对 expr 的型别和ParamType的型别执行模式匹配，来决定
+	*    T的型别；在此类情况下，expr的常量性将会得以保持
+	* 2. 如果 expr 是一个左值，则 T 和 ParamType 会被推导为左值引用； 如果 expr 是一个右值，则应用常规推导规则
+	* 3. 这种情况下ParamType既非指针，也非引用，也就是按值传递，此时将应用如下规则：A. 若 expr 具有引用类型，则
+	*    忽略其引用部分；忽略 expr 的顶层的 const 和 volatile， 保留其底层的 const 和 volatile
+	* 
+	* 对于数组和函数，还需要关注其指针退化问题：
+	* const char name[] = "J. P. Briggs";
+	* 
+	* 对于按值传递的模板来说，T 的推导类型为 const char *
+	* template <typename T> void f(T param); f(name);
+	* 
+	* 对于按引用传递的模板来说，T 的推导类型为 const char (&)[13]
+	* template <typename T> void f(T& param); f(name);
+	* 
+	* 所以有了下面的一个求数组长度的模板函数
+	*/
+
+	template <typename T, std::size_t N>
+	constexpr std::size_t arraySize(T(&)[N]) noexcept
+	{
+		return N;
+	}
+
+	int main()
+	{
+		int keyVals[] = { 1, 3, 7, 9, 11, 22, 35 };
+
+		cout << "The size of keyVals is " << arraySize(keyVals);
+
+		return 0;
+	}
 }
 
 namespace IteratorTraits
@@ -19,6 +110,66 @@ namespace IteratorTraits
 		if (typeid(traits::iterator_category) == typeid(std::random_access_iterator_tag))
 		{
 			cout << "int * is a random-access iterator";
+		}
+
+		return 0;
+	}
+}
+
+namespace CopyTest
+{
+	class Foo
+	{
+	public:
+		Foo() { cout << "Constructor was called!" << endl; }
+
+		Foo(const Foo&) { cout << "Copy Constructor was called!" << endl; }
+		Foo& operator==(const Foo&) { cout << "Assignment operator was called!" << endl; }
+		
+		Foo(Foo&&) { cout << "Move Constructor was called!" << endl; }
+		Foo& operator==(Foo&&) { cout << "Move assignment operator!" << endl; }
+	
+		// 统计构造函数调用的次数是统计对象构造总次数的有效方法（因为对象构造不止一种途径）
+		~Foo() { cout << "Destructor was called!" << endl; } 
+	};
+
+	Foo copyTest1()
+	{
+		Foo f1;
+
+		return f1;
+	}
+
+	Foo copyTest2()
+	{
+		Foo f2;
+
+		return std::move(f2);
+	}
+
+	int main()
+	{
+		// 编译器已经进行优化
+		{
+			cout << endl << "**********情况1**************" << endl;
+			Foo f1 = copyTest1(); // 进行 一次构造 和 一次移动构造
+		}
+
+		{
+			cout << endl << "**********情况2**************" << endl;
+			Foo f2 = copyTest2(); // 进行 一次构造 和 一次移动构造
+		}
+
+
+		// 编译器反而不能对下述语句进行优化
+		{
+			cout << endl << "**********情况3**************" << endl;
+			Foo f3 = std::move(copyTest1()); // 进行 一次构造 和 两次移动构造
+		}
+
+		{
+			cout << endl << "**********情况4**************" << endl;
+			Foo f4 = std::move(copyTest2()); // 进行一次构造 和 两次移动构造
 		}
 
 		return 0;
@@ -1152,7 +1303,6 @@ namespace PlayCard
 		return 0;
 	}
 }
-
 // 
 /*
 * 100101000001001010000100101
@@ -1211,7 +1361,6 @@ namespace BitsStream
 		return 0;
 	}
 }
-
 
 namespace Hex2Base64
 {
@@ -1316,15 +1465,84 @@ namespace Hex2Base64
 	}
 }
 
-
 namespace SortAlgorithm
 {
-	void _quicksort(vector<int>& vec, int l, int r){
+	// QuickSort Algorithm
+	int Partition(vector<int>& vec, int l, int r, int randomPoint)
+	{
+		int cmpVal = vec[randomPoint];
+		swap(vec[r], vec[randomPoint]);
 
+		// firstHigh 应该从 l 开始，而非从 0 开始
+		int firstHigh = l;
+
+		for (int i = l; i < r; i++)
+		{
+			if (vec[i] < cmpVal)
+			{
+				swap(vec[i], vec[firstHigh++]);
+			}
+		}
+
+		swap(vec[firstHigh], vec[r]);
+
+		return firstHigh;
+	}
+
+	void _quicksort(vector<int>& vec, int l, int r){
+		if (l >= r )
+		{
+			return;
+		}
+
+		int randomPoint = l + rand() % (r - l + 1);
+
+		int partitionPoint = Partition(vec, l, r, randomPoint);
+
+		_quicksort(vec, l, partitionPoint - 1);
+		_quicksort(vec, partitionPoint + 1, r);
 	}
 
 	void QuickSort(vector<int>& vec, int l, int r) {
+		srand(time(nullptr));
 
+		_quicksort(vec, l, r-1);
+	}
+
+	void TestQuickSort()
+	{
+		ofstream ofs("quicksorttest.txt", ofstream::out);
+
+		for (int i = 0; i <= 1000000; i = i + 10000)
+		{
+			vector<int> vec(i);
+
+			for (int j = 0; j < vec.size(); j++)
+			{
+				vec[j] = rand();
+			}
+
+			auto start = chrono::high_resolution_clock::now();
+
+			QuickSort(vec, 0, vec.size());
+
+			auto interval = chrono::high_resolution_clock::now() - start;
+
+			auto secs = chrono::duration_cast<chrono::milliseconds>(interval);
+
+			ofs << secs.count() << ',';
+		}
+
+		ofs.close();
+		return 0;
+	}
+
+	int main()
+	{
+		//TestQuickSort();
+
+
+		return 0;
 	}
 }
 
@@ -1432,6 +1650,107 @@ namespace PrintLetterSequentially
 	}
 }
 
+namespace PascalTriangle
+{
+	vector<vector<int>> DynamicWay(int numRows) {
+		// 为向量分配内存
+		vector<vector<int>> result(numRows);
+
+		for (int i = 0; i < numRows; i++)
+		{
+			result[i].resize(i + 1);
+		}
+
+		// 初始化向量
+		for (int i = 0; i < numRows; i++)
+		{
+			result[i][0] = 1;
+			result[i][i] = 1;
+		}
+
+		//递推
+		for (int i = 1; i < numRows; i++)
+		{
+			for (int j = 1; j < i; j++)
+			{
+				result[i][j] = result[i - 1][j - 1] + result[i - 1][j];
+			}
+		}
+		// 打印结果
+		for (auto& v : result)
+		{
+			for (auto i : v)
+			{
+				cout << i << ' ';
+			}
+			cout << endl;
+		}
+
+
+		return result;
+	}
+
+	int _RecursiveWay(vector<vector<int>>& result,int i, int j) {
+		if (j <= 0 || i <= 0 || i <= j)
+		{
+			return 1;
+		}
+		else if (result[i][j] != -1)
+		{
+			return result[i][j];
+		}
+		else
+		{
+			return result[i - 1][j - 1] + result[i - 1][j];
+		}
+
+	}
+
+	vector<vector<int>> RecursiveWay(int numRows) {
+		vector<vector<int>> result(numRows);
+
+		for (int i = 0; i < numRows; i++)
+		{
+			result[i].resize(i + 1, -1);
+		}
+
+		for (int i = 0; i < numRows; i++)
+		{
+			for (int j = 0; j <= i; j++)
+			{
+				if (result[i][j] != -1)
+				{
+					continue;
+				}
+				else
+				{
+					result[i][j] = _RecursiveWay(result, i, j);
+				}
+			}
+		}
+
+		for (auto& v : result)
+		{
+			for (auto i : v)
+			{
+				cout << i << ' ';
+			}
+			cout << endl;
+		}
+
+		return result;
+	}
+
+	int main()
+	{
+		int numRows = 5;
+
+		RecursiveWay(numRows);
+
+		return 0;
+	}
+}
+
 int main()
 {
 	//Permutations::main();
@@ -1449,8 +1768,14 @@ int main()
 	//RandomCPP::main();
 	//ChronoCPP::main();
 	//BFSEXAMPLE::main();
+	//SortAlgorithm::main();
 	//MySingleton::main();
-	PrintLetterSequentially::main();
+	//PrintLetterSequentially::main();
+	//PascalTriangle::main();
+	//LRVALUE::main();
+	//AUTOTEST::main();
+	//CopyTest::main();
+	
 	return 0;
 
 }

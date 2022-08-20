@@ -1115,6 +1115,143 @@ namespace AllSubSet
 	}
 }
 
+namespace DynamicProgramming
+{
+	// 最长递增子序列
+	pair<int, int> lengthOfLIS(vector<int>& nums, vector<int>& parentTable)
+	{
+		vector<int> dp(nums.size(), 1);
+
+		for (int i = 1; i < nums.size(); i++)
+		{
+			int maxval = INT_MIN;
+			for (int j = i-1; j >= 0; j-- )
+			{
+				if (nums[i] > nums[j])
+				{
+					if (maxval < dp[j]+1)
+					{
+						maxval = dp[j] + 1;
+						dp[i] = maxval;
+						parentTable[i] = j;
+					}
+				}
+			}
+		}
+
+		int maxval = INT_MIN;
+		int index = -1;
+		for (int i = 0; i < nums.size(); i++)
+		{
+			if (dp[i] > maxval)
+			{
+				maxval = dp[i];
+				index = i;
+			}
+		}
+
+		return make_pair(maxval, index);
+	}
+
+	void FindPath(vector<int>& nums,vector<int>& parentTable, int index)
+	{
+		if (index == -1)
+		{
+			return;
+		}
+		else
+		{
+			FindPath(nums, parentTable, parentTable[index]);
+			cout << nums[index] << ' ';
+		}
+	}
+
+	void lengthOfLISTestCase()
+	{
+		vector<int> nums{ 10, 9, 2, 5, 3, 7, 101, 18 };
+		vector<int> parentTable(nums.size(), -1);
+
+		pair<int, int> result = lengthOfLIS(nums, parentTable);
+
+		cout << "The longest regid increment sequence length is : " << result.first << endl;
+		FindPath(nums, parentTable, result.second);
+	}
+
+	// 零钱兑换[排列]
+	// 给定某一面值的纸币和可供兑换的零钱面值，求最少兑换的硬币数。
+	int coinChange(vector<int>& coins, int amount)
+	{
+		vector<int> dp(amount + 1, -1);
+		
+		dp[0] = 0;
+		for (int i = 1; i <= amount; i++)
+		{
+			int minval = INT_MAX;
+			for (int j = 0; j < coins.size(); j++)
+			{
+				int tmp = i - coins[j];
+
+				if (tmp >= 0 && dp[tmp] != -1 && minval > dp[tmp]+1)
+				{
+					minval = dp[tmp] + 1;
+					dp[i] = minval;
+				}
+			}
+		}
+
+		return dp[amount];
+
+	}
+
+
+	void coinChangeTest()
+	{
+		vector<int> coins{ 1, 2, 5 };
+		int amount = 11;
+		
+		cout << "To change " << amount << " $, " << "we at least get " << coinChange(coins, amount) << " coins" << endl;
+	}
+
+	// 零钱兑换2[组合问题]
+	// 给定一定面值的纸币和可供兑换的硬币面值，给出兑换方式的种类数
+	// 上述做法不会重复计算不同的排列。因为外层循环是遍历数组 coins 的值，内层循环是遍历不同的金额之和，在计算 dp[i] 的值时，
+	// 可以确保金额之和等于 i 的硬币面额的顺序，**由于顺序确定，因此不会重复计算不同的排列**。
+	//	3 = 1 + 1 + 1
+	//	3 = 1 + 2
+	// 硬币面额 2 不可能出现在硬币面额 1 之前，即不会重复计算 3 = 2 + 1 和 3 = 1 + 2 的情况。
+	int coinChange2(vector<int>& coins, int amount)
+	{
+		vector<int> dp(amount + 1);
+		dp[0] = 1;
+
+		// 先遍历球
+		for (int coin : coins) {
+			for (int i = coin; i <= amount; i++) {
+				dp[i] += dp[i - coin];
+			}
+		}
+		return dp[amount];
+	}
+
+
+	void coinChange2Test()
+	{
+		vector<int> coins{ 1, 2, 5 };
+		int amount = 11;
+
+		cout << "To change " << amount << " $, " << "we have " << coinChange2(coins, amount) << " different ways" << endl;
+	}
+
+
+	int main()
+	{
+		//lengthOfLISTestCase();
+		//coinChangeTest();
+		coinChange2Test();
+		return 0;
+	}
+}
+
 namespace stringManipulation
 {
 	// 通过某种标志行字符将字符串分成两个部分
@@ -1879,7 +2016,7 @@ namespace FORPRATICE
 
 		return 0;
 	}
-
+	
 }
 
 int main()
@@ -1891,6 +2028,7 @@ int main()
 	//MonoStack::main();
 	//stringManipulation::main();
 	//AllSubSet::main();
+	DynamicProgramming::main();
 	//BitsStream::main();
 	//MinimumSpanningTree::main();
 	//ShortestPath::main();
@@ -1907,7 +2045,7 @@ int main()
 	//AUTOTEST::main();
 	//CopyTest::main();
 	//FindMaxValEveryK::main();
-	FORPRATICE::main();
+	//FORPRATICE::main();
 	return 0;
 
 }

@@ -758,6 +758,11 @@ namespace RECURSIVEWAY
 	// 小红希望最终a是b的倍数或者b是a的倍数，他想知道自己最少的操作
 	// 次数是多少？
 
+	// 如果将字符串当成对象，将每次减少一个字符作为操作的话，我们可以得到如下的递归树：
+	//                                         (A, B)
+	//                     (A-1, B)                                  (A, B-1)
+	//               (A-2, B)    **(A-1, B-1)**            **(A-1, B-1)**   (A, B-2)
+	// 标记**的地方出现了重复递归，造成复杂度过大，因此我们需要记忆化来减少递归的复杂度。
 	struct pairHash
 	{
 	private:
@@ -831,6 +836,14 @@ namespace RECURSIVEWAY
 
 	// 题目二：
 	// 给你一个字符串和一个字符串银行（包含可用字符串），问是否可以用可用字符串构造出字符串。
+
+	// 如果我们将最终需要构建的字符串对象记为A， 将字符串银行记为(W1, W2, W3, W4, ...)
+	// 我们递归的过程可以表示成如下形式：
+	//                                                 A
+	//                     A-Wi1                     A-Wj1                    A-Wk1
+	//             A-Wi11       A-Wi12              A-Wj11           A-Wk11   A-Wk12     A-Wk13
+	// 在有些情况下，不同的节点是有可能重复的，这就有可能造成重复和不必要的递归，因此我们也需要使用记忆化的方式改善之。
+
 	unordered_map<string, bool> canConstructMap;
 
 	bool CanConstruct(string targetStr, vector<string>& wordBank)

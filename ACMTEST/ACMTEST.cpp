@@ -1,6 +1,64 @@
 ﻿#include <bits/stdc++.h>
 using namespace std;
 
+namespace ABOUTVECTOR
+{
+	void STLResize()
+	{
+		vector<int> vec{ 1, 2, 3, 4, 5, 6 };
+
+		vec.resize(vec.size(), 100); 
+
+		// 切记，resize后面的初始化值只能初始化新增部分，而不能初始化老的部分。
+		cout << "After Resize : ";
+		for (auto i : vec)
+		{
+			cout << i << ' ';
+		}
+		cout << endl;
+
+		cout << "After fill : ";
+		// 要想将数组中所有的值都初始化成一个值，则可以使用 STL的 fill 函数
+		fill(vec.begin(), vec.end(), 100);
+
+		for (auto i : vec)
+		{
+			cout << i << ' ';
+		}
+		cout << endl;
+
+	}
+
+	void STLPartition()
+	{
+		// 用标准库完成快速排序的 Partition
+		vector<int> vec{6, 5, 4, 3, 2, 1, 0};
+
+		int pivot = 3;
+
+		int cmpNum = vec[pivot];
+		
+		swap(vec[pivot], vec.back());
+		
+		auto iterFirst = partition(vec.begin(), vec.end()-1, [=](int num) {return num < cmpNum; });
+
+		swap(*iterFirst, vec.back());
+
+		for (auto i : vec)
+		{
+			cout << i << ' ';
+		}
+
+	}
+
+	int main()
+	{
+		//STLPartition();
+		STLResize();
+		return 0;
+	}
+}
+
 namespace LRVALUE
 {
 	void overloaded(const int&);
@@ -2368,8 +2426,8 @@ int main()
 	//FindMaxValEveryK::main();
 	//FORPRATICE::main();
 	//ArrayTest::main();
-	RECURSIVEWAY::main();
-	
+	//RECURSIVEWAY::main();
+	ABOUTVECTOR::main();
 	return 0;
 
 }

@@ -614,6 +614,142 @@ namespace DFS
 	}
 }
 
+namespace RECURSIVEWAY
+{
+	// 题目一：
+	// 小红拿到两个正整数a和b，他每次操作可以选择其中一个正整数，删除一个数位。
+	// 例如，对于 "1, 2, 3, 4" 而言，进行一次操作可以生成 "124"|"123"|"143"或"243"
+	// 小红希望最终a是b的倍数或者b是a的倍数，他想知道自己最少的操作
+	// 次数是多少？
+	
+	struct pairHash
+	{
+	private:
+		std::hash<string> str_hash;
+
+	public:
+		size_t operator()(const pair<string, string>& param) const
+		{
+			return str_hash(param.first + param.second);
+		}
+	};
+
+	unordered_map<pair<string, string>, int, pairHash> RecordMap;
+
+	int MinOps(string str1, string str2)
+	{
+		if (str1.empty() || str2.empty())
+		{
+			return INT_MAX;
+		}
+
+		pair<string, string> tmpPair(str1, str2);
+		if (RecordMap.find(tmpPair) != RecordMap.end())
+		{
+			return RecordMap[tmpPair];
+		}
+
+		int num1 = stoi(str1);
+		int num2 = stoi(str2);
+
+		if (num1 % num2 == 0 || num2 % num1 == 0)
+		{
+			return 0;
+		}
+
+		int minOfstr = INT_MAX;
+
+		for (int i = 0; i < str1.length(); i++)
+		{
+			string tmp = str1;
+			tmp.erase(tmp.begin() + i);
+			int ret = MinOps(tmp, str2);
+			minOfstr = minOfstr < ret ? minOfstr : ret;
+		}
+
+		for (int i = 0; i < str2.length(); i++)
+		{
+			string tmp = str2;
+			tmp.erase(tmp.begin() + i);
+			int ret = MinOps(str1, tmp);
+			minOfstr = minOfstr < ret ? minOfstr : ret;
+		}
+
+		int result = minOfstr == INT_MAX ? INT_MAX : minOfstr + 1;
+	
+		RecordMap[make_pair(str1, str2)] = result;
+		RecordMap[make_pair(str2, str1)] = result;
+
+		return result;
+	}
+
+	void testMinOps()
+	{
+		string str1 = "3712";
+		string str2 = "8";
+
+		cout << "We at least need " << MinOps(str1, str2) << " steps!";
+	}
+
+
+	// 题目二：
+	// 给你一个字符串和一个字符串银行（包含可用字符串），问是否可以用可用字符串构造出字符串。
+	unordered_map<string, bool> canConstructMap;
+
+	bool CanConstruct(string targetStr, vector<string>& wordBank)
+	{
+		if (targetStr.empty())
+		{
+			return true;
+		}
+
+		if (canConstructMap.find(targetStr) != canConstructMap.end())
+		{
+			return canConstructMap[targetStr];
+		}
+
+		for (auto& s : wordBank)
+		{
+			// 注意，下面其实涉及了字符串的较为高级的操作：如何寻找某个字符串并将其分割出去？
+			string::size_type found = targetStr.find(s);
+
+			if (found == 0)
+			{
+				string tmp = targetStr.substr(s.size());
+				bool ret = CanConstruct(tmp, wordBank);
+
+				if (ret)
+				{
+					canConstructMap[targetStr] = true;
+					return true;
+				}
+			}
+		}
+
+		canConstructMap[targetStr] = false;
+
+		return false;
+	}
+
+	void TestCanConstruct()
+	{
+		string str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef";
+		vector<string> strVec{ "e", "ee", "eee", "eeee"};
+
+		int ret = CanConstruct(str, strVec);
+
+		cout << (ret ? "True" : "False") << endl;
+
+	}
+
+	int main()
+	{
+		//testMinOps();
+		TestCanConstruct();
+		return 0;
+	}
+}
+
 namespace BFSEXAMPLE
 {
 	// 定义我们所需的数据类型，一般包含节点的所有信息。
@@ -1976,8 +2112,6 @@ namespace FindMaxValEveryK
 		{
 			cout << i << ' ';
 		}
-
-
 	}
 
 	int main()
@@ -1992,22 +2126,7 @@ namespace FORPRATICE
 	// Practice makes perfect!!!
 	void TestCase()
 	{
-		vector<int> vec{ 3, 4, 2 , 5, 7, 8,1 };
-
-		sort(vec.begin(), vec.end());
-
-		int count = 0;
-		do 
-		{
-			count++;
-			for (auto i : vec)
-			{
-				cout << i << ' ';
-			}
-			cout << endl;
-		} while (next_permutation(vec.begin(), vec.end()));
-
-		cout << "Totally " << count << " situations!" << endl;
+		
 	}
 
 	int main()
@@ -2019,6 +2138,36 @@ namespace FORPRATICE
 	
 }
 
+namespace ArrayTest
+{
+	void arraytest1(int arr[])
+	{
+		cout << "Array Test 1 (int arr[]) : " << sizeof(arr) << endl;
+	}
+
+	void arraytest2(int* arr)
+	{
+		cout << "Array Test 2 (int* arr) : " << sizeof(arr) << endl;
+	}
+
+	int main()
+	{
+		int a[] = { 1, 2, 3, 4, 5 };
+		
+		char c[] = "Hello";
+		const char* d = "World";
+		
+		arraytest1(a);
+		arraytest2(a);
+
+		cout << sizeof(a) << endl;
+		cout << sizeof(c) << endl;
+		cout << sizeof(d) << endl;
+
+		return 0;
+	}
+}
+
 int main()
 {
 	//Permutations::main();
@@ -2028,7 +2177,7 @@ int main()
 	//MonoStack::main();
 	//stringManipulation::main();
 	//AllSubSet::main();
-	DynamicProgramming::main();
+	//DynamicProgramming::main();
 	//BitsStream::main();
 	//MinimumSpanningTree::main();
 	//ShortestPath::main();
@@ -2046,6 +2195,9 @@ int main()
 	//CopyTest::main();
 	//FindMaxValEveryK::main();
 	//FORPRATICE::main();
+	//ArrayTest::main();
+	RECURSIVEWAY::main();
+	
 	return 0;
 
 }

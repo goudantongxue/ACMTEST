@@ -748,8 +748,153 @@ namespace BFSEXAMPLE
 
 namespace RECURSIVEWAY
 {
+	// 二叉树的构建与递归遍历
+	struct TreeNode
+	{
+		int val;
+		TreeNode* left;
+		TreeNode* right;
+
+		TreeNode(int v):val(v), left(nullptr), right(nullptr){}
+		TreeNode(int v, TreeNode* l, TreeNode* r) : val(v), left(l), right(r) {}
+	};
+
+	
+	TreeNode* ReadTree()
+	{
+		string strRoot;
+		cin >> strRoot;
+
+		if (strRoot == "!")
+		{
+			return nullptr;
+		}
+
+		int num = stoi(strRoot);
+		TreeNode* root = new TreeNode(num);
+
+		queue<TreeNode*> q;
+		q.push(root);
+
+		while (!q.empty())
+		{
+			TreeNode* tmp = q.front();
+			q.pop();
+
+			string l;
+			cin >> l;
+			if (l == "!")
+			{
+				break;
+			}
+
+			string r;
+			cin >> r;
+			if (r == "!")
+			{
+				break;
+			}
+
+			if (l != "None")
+			{
+				int lnum = stoi(l);
+				tmp->left = new TreeNode(lnum);
+				q.push(tmp->left);
+			}
+
+			if (r != "None")
+			{
+				int rnum = stoi(r);
+				tmp->right = new TreeNode(rnum);
+				q.push(tmp->right);
+			}
+		}
+		
+		return root;
+	}
+
+	void PrintTree(TreeNode* root)
+	{
+		if (root == nullptr)
+		{
+			cout << "空树！" << endl;
+		}
+
+		queue<TreeNode*> qcurrent, qnext;
+		qcurrent.push(root);
+
+		while (!qcurrent.empty())
+		{
+			while (!qcurrent.empty())
+			{
+				TreeNode* tmp = qcurrent.front();
+				qcurrent.pop();
+
+				if (tmp != nullptr)
+				{
+					cout << tmp->val << ' ';
+					qnext.push(tmp->left);
+					qnext.push(tmp->right);
+				}
+				else
+				{
+					cout << "None" << ' ';
+				}				
+			}
+			
+			cout << endl;
+
+			qnext.swap(qcurrent);	
+		}
+	}
+
+	// 这是一道典型的用递归解决问题的题目：根据参数决定终止条件，根据返回值的判断以及加工决定最终的返回结果。
+	// 二叉树是回溯算法的一种简单情况，因为在任何时刻，其只有两种情况：左子节点或者右子节点，然后对这两种情况综合分析
+	// 最终决定当前递归深度的返回值。
+	int MinimumDepth(TreeNode* root)
+	{
+		if (root == nullptr)
+		{
+			return 0;
+		}
+		if (root->left == nullptr && root->right == nullptr)
+		{
+			return 1;
+		}
+
+		int minDep = INT_MAX;
+
+		if (root->left)
+		{
+			int tmp = MinimumDepth(root->left);
+			minDep = minDep < tmp ? minDep : tmp;
+		}
+
+		if (root->right)
+		{
+			int tmp = MinimumDepth(root->right);
+			minDep = minDep < tmp ? minDep : tmp;
+		}
+
+		return minDep + 1;
+	}
+
+
+	void TestTree()
+	{
+		TreeNode* root = ReadTree();
+		PrintTree(root);
+
+		cout << "The minimum depth of tree is : " << MinimumDepth(root) << endl;
+
+	}
+
 	// 本质：多叉树的递归问题，在递归不断嵌套的时候可以不断的通过参数传递一些信息
 	//       在递归不断被解开的时候通过返回值的加工不断向上传递结果。
+	//       但是，在树的扩展过程中，我们有可能遇到一模一样的节点，这是，继续进行重复的扩展与递归
+	//       会极大的增加复杂度，这时我们可以用记忆化的方法进行优化。
+	//       二叉树中并不存在此类问题，因为其每个节点都不重复(尽管值有可能一样，但是结构也会不同，至少我们不能
+	//        有节点相同的预设，即使他们节点真的相同)。
 
 
 	// 题目一：
@@ -904,7 +1049,8 @@ namespace RECURSIVEWAY
 	int main()
 	{
 		//testMinOps();
-		TestCanConstruct();
+		//TestCanConstruct();
+		TestTree();
 		return 0;
 	}
 }

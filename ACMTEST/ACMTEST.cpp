@@ -614,142 +614,6 @@ namespace DFS
 	}
 }
 
-namespace RECURSIVEWAY
-{
-	// 题目一：
-	// 小红拿到两个正整数a和b，他每次操作可以选择其中一个正整数，删除一个数位。
-	// 例如，对于 "1, 2, 3, 4" 而言，进行一次操作可以生成 "124"|"123"|"143"或"243"
-	// 小红希望最终a是b的倍数或者b是a的倍数，他想知道自己最少的操作
-	// 次数是多少？
-	
-	struct pairHash
-	{
-	private:
-		std::hash<string> str_hash;
-
-	public:
-		size_t operator()(const pair<string, string>& param) const
-		{
-			return str_hash(param.first + param.second);
-		}
-	};
-
-	unordered_map<pair<string, string>, int, pairHash> RecordMap;
-
-	int MinOps(string str1, string str2)
-	{
-		if (str1.empty() || str2.empty())
-		{
-			return INT_MAX;
-		}
-
-		pair<string, string> tmpPair(str1, str2);
-		if (RecordMap.find(tmpPair) != RecordMap.end())
-		{
-			return RecordMap[tmpPair];
-		}
-
-		int num1 = stoi(str1);
-		int num2 = stoi(str2);
-
-		if (num1 % num2 == 0 || num2 % num1 == 0)
-		{
-			return 0;
-		}
-
-		int minOfstr = INT_MAX;
-
-		for (int i = 0; i < str1.length(); i++)
-		{
-			string tmp = str1;
-			tmp.erase(tmp.begin() + i);
-			int ret = MinOps(tmp, str2);
-			minOfstr = minOfstr < ret ? minOfstr : ret;
-		}
-
-		for (int i = 0; i < str2.length(); i++)
-		{
-			string tmp = str2;
-			tmp.erase(tmp.begin() + i);
-			int ret = MinOps(str1, tmp);
-			minOfstr = minOfstr < ret ? minOfstr : ret;
-		}
-
-		int result = minOfstr == INT_MAX ? INT_MAX : minOfstr + 1;
-	
-		RecordMap[make_pair(str1, str2)] = result;
-		RecordMap[make_pair(str2, str1)] = result;
-
-		return result;
-	}
-
-	void testMinOps()
-	{
-		string str1 = "3712";
-		string str2 = "8";
-
-		cout << "We at least need " << MinOps(str1, str2) << " steps!";
-	}
-
-
-	// 题目二：
-	// 给你一个字符串和一个字符串银行（包含可用字符串），问是否可以用可用字符串构造出字符串。
-	unordered_map<string, bool> canConstructMap;
-
-	bool CanConstruct(string targetStr, vector<string>& wordBank)
-	{
-		if (targetStr.empty())
-		{
-			return true;
-		}
-
-		if (canConstructMap.find(targetStr) != canConstructMap.end())
-		{
-			return canConstructMap[targetStr];
-		}
-
-		for (auto& s : wordBank)
-		{
-			// 注意，下面其实涉及了字符串的较为高级的操作：如何寻找某个字符串并将其分割出去？
-			string::size_type found = targetStr.find(s);
-
-			if (found == 0)
-			{
-				string tmp = targetStr.substr(s.size());
-				bool ret = CanConstruct(tmp, wordBank);
-
-				if (ret)
-				{
-					canConstructMap[targetStr] = true;
-					return true;
-				}
-			}
-		}
-
-		canConstructMap[targetStr] = false;
-
-		return false;
-	}
-
-	void TestCanConstruct()
-	{
-		string str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef";
-		vector<string> strVec{ "e", "ee", "eee", "eeee"};
-
-		int ret = CanConstruct(str, strVec);
-
-		cout << (ret ? "True" : "False") << endl;
-
-	}
-
-	int main()
-	{
-		//testMinOps();
-		TestCanConstruct();
-		return 0;
-	}
-}
-
 namespace BFSEXAMPLE
 {
 	// 定义我们所需的数据类型，一般包含节点的所有信息。
@@ -878,6 +742,292 @@ namespace BFSEXAMPLE
 	int main()
 	{
 		UnitTestWordLadder();
+		return 0;
+	}
+}
+
+namespace RECURSIVEWAY
+{
+	// 本质：多叉树的递归问题，在递归不断嵌套的时候可以不断的通过参数传递一些信息
+	//       在递归不断被解开的时候通过返回值的加工不断向上传递结果。
+
+
+	// 题目一：
+	// 小红拿到两个正整数a和b，他每次操作可以选择其中一个正整数，删除一个数位。
+	// 例如，对于 "1, 2, 3, 4" 而言，进行一次操作可以生成 "124"|"123"|"143"或"243"
+	// 小红希望最终a是b的倍数或者b是a的倍数，他想知道自己最少的操作
+	// 次数是多少？
+
+	struct pairHash
+	{
+	private:
+		std::hash<string> str_hash;
+
+	public:
+		size_t operator()(const pair<string, string>& param) const
+		{
+			return str_hash(param.first + param.second);
+		}
+	};
+
+	unordered_map<pair<string, string>, int, pairHash> RecordMap;
+
+	int MinOps(string str1, string str2)
+	{
+		if (str1.empty() || str2.empty())
+		{
+			return INT_MAX;
+		}
+
+		pair<string, string> tmpPair1(str1, str2);
+		pair<string, string> tmpPair2(str2, str1);
+		if (RecordMap.find(tmpPair1) != RecordMap.end() || RecordMap.find(tmpPair2) != RecordMap.end())
+		{
+			return RecordMap[tmpPair1];
+		}
+
+		int num1 = stoi(str1);
+		int num2 = stoi(str2);
+
+		if (num1 % num2 == 0 || num2 % num1 == 0)
+		{
+			return 0;
+		}
+
+		int minOfstr = INT_MAX;
+
+		for (int i = 0; i < str1.length(); i++)
+		{
+			string tmp = str1;
+			tmp.erase(tmp.begin() + i);
+			int ret = MinOps(tmp, str2);
+			minOfstr = minOfstr < ret ? minOfstr : ret;
+		}
+
+		for (int i = 0; i < str2.length(); i++)
+		{
+			string tmp = str2;
+			tmp.erase(tmp.begin() + i);
+			int ret = MinOps(str1, tmp);
+			minOfstr = minOfstr < ret ? minOfstr : ret;
+		}
+
+		int result = minOfstr == INT_MAX ? INT_MAX : minOfstr + 1;
+
+		RecordMap[make_pair(str1, str2)] = result;
+		RecordMap[make_pair(str2, str1)] = result;
+
+		return result;
+	}
+
+	void testMinOps()
+	{
+		string str1 = "3712";
+		string str2 = "8";
+
+		cout << "We at least need " << MinOps(str1, str2) << " steps!";
+	}
+
+
+	// 题目二：
+	// 给你一个字符串和一个字符串银行（包含可用字符串），问是否可以用可用字符串构造出字符串。
+	unordered_map<string, bool> canConstructMap;
+
+	bool CanConstruct(string targetStr, vector<string>& wordBank)
+	{
+		if (targetStr.empty())
+		{
+			return true;
+		}
+
+		if (canConstructMap.find(targetStr) != canConstructMap.end())
+		{
+			return canConstructMap[targetStr];
+		}
+
+		for (auto& s : wordBank)
+		{
+			// 注意，下面其实涉及了字符串的较为高级的操作：如何寻找某个字符串并将其分割出去？
+			string::size_type found = targetStr.find(s);
+
+			if (found == 0)
+			{
+				string tmp = targetStr.substr(s.size());
+				bool ret = CanConstruct(tmp, wordBank);
+
+				if (ret)
+				{
+					canConstructMap[targetStr] = true;
+					return true;
+				}
+			}
+		}
+
+		canConstructMap[targetStr] = false;
+
+		return false;
+	}
+
+	void TestCanConstruct()
+	{
+		string str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef";
+		vector<string> strVec{ "e", "ee", "eee", "eeee" };
+
+		int ret = CanConstruct(str, strVec);
+
+		cout << (ret ? "True" : "False") << endl;
+
+	}
+
+	// Coin Change Ⅰ : Recursive Way
+
+
+
+
+	// Coin Change Ⅱ : Recursive Way
+
+
+
+	int main()
+	{
+		//testMinOps();
+		TestCanConstruct();
+		return 0;
+	}
+}
+
+namespace DynamicProgramming
+{
+	// 最长递增子序列
+	pair<int, int> lengthOfLIS(vector<int>& nums, vector<int>& parentTable)
+	{
+		vector<int> dp(nums.size(), 1);
+
+		for (int i = 1; i < nums.size(); i++)
+		{
+			int maxval = INT_MIN;
+			for (int j = i - 1; j >= 0; j--)
+			{
+				if (nums[i] > nums[j])
+				{
+					if (maxval < dp[j] + 1)
+					{
+						maxval = dp[j] + 1;
+						dp[i] = maxval;
+						parentTable[i] = j;
+					}
+				}
+			}
+		}
+
+		int maxval = INT_MIN;
+		int index = -1;
+		for (int i = 0; i < nums.size(); i++)
+		{
+			if (dp[i] > maxval)
+			{
+				maxval = dp[i];
+				index = i;
+			}
+		}
+
+		return make_pair(maxval, index);
+	}
+
+	void FindPath(vector<int>& nums, vector<int>& parentTable, int index)
+	{
+		if (index == -1)
+		{
+			return;
+		}
+		else
+		{
+			FindPath(nums, parentTable, parentTable[index]);
+			cout << nums[index] << ' ';
+		}
+	}
+
+	void lengthOfLISTestCase()
+	{
+		vector<int> nums{ 10, 9, 2, 5, 3, 7, 101, 18 };
+		vector<int> parentTable(nums.size(), -1);
+
+		pair<int, int> result = lengthOfLIS(nums, parentTable);
+
+		cout << "The longest regid increment sequence length is : " << result.first << endl;
+		FindPath(nums, parentTable, result.second);
+	}
+
+	// 零钱兑换[排列]
+	// 给定某一面值的纸币和可供兑换的零钱面值，求最少兑换的硬币数。
+	int coinChange(vector<int>& coins, int amount)
+	{
+		vector<int> dp(amount + 1, -1);
+
+		dp[0] = 0;
+		for (int i = 1; i <= amount; i++)
+		{
+			int minval = INT_MAX;
+			for (int j = 0; j < coins.size(); j++)
+			{
+				int tmp = i - coins[j];
+
+				if (tmp >= 0 && dp[tmp] != -1 && minval > dp[tmp] + 1)
+				{
+					minval = dp[tmp] + 1;
+					dp[i] = minval;
+				}
+			}
+		}
+
+		return dp[amount];
+	}
+
+
+	void coinChangeTest()
+	{
+		vector<int> coins{ 1, 2, 5 };
+		int amount = 11;
+
+		cout << "To change " << amount << " $, " << "we at least get " << coinChange(coins, amount) << " coins" << endl;
+	}
+
+	// 零钱兑换2[组合问题]
+	// 给定一定面值的纸币和可供兑换的硬币面值，给出兑换方式的种类数
+	// 上述做法不会重复计算不同的排列。因为外层循环是遍历数组 coins 的值，内层循环是遍历不同的金额之和，在计算 dp[i] 的值时，
+	// 可以确保金额之和等于 i 的硬币面额的顺序，**由于顺序确定，因此不会重复计算不同的排列**。
+	//	3 = 1 + 1 + 1
+	//	3 = 1 + 2
+	// 硬币面额 2 不可能出现在硬币面额 1 之前，即不会重复计算 3 = 2 + 1 和 3 = 1 + 2 的情况。
+	int coinChange2(vector<int>& coins, int amount)
+	{
+		vector<int> dp(amount + 1);
+		dp[0] = 1;
+
+		// 先遍历球
+		for (int coin : coins) {
+			for (int i = coin; i <= amount; i++) {
+				dp[i] += dp[i - coin];
+			}
+		}
+		return dp[amount];
+	}
+
+
+	void coinChange2Test()
+	{
+		vector<int> coins{ 1, 2, 5 };
+		int amount = 11;
+
+		cout << "To change " << amount << " $, " << "we have " << coinChange2(coins, amount) << " different ways" << endl;
+	}
+
+
+	int main()
+	{
+		//lengthOfLISTestCase();
+		//coinChangeTest();
+		coinChange2Test();
 		return 0;
 	}
 }
@@ -1247,143 +1397,6 @@ namespace AllSubSet
 		}
 
 		cout << result.size() << endl;
-		return 0;
-	}
-}
-
-namespace DynamicProgramming
-{
-	// 最长递增子序列
-	pair<int, int> lengthOfLIS(vector<int>& nums, vector<int>& parentTable)
-	{
-		vector<int> dp(nums.size(), 1);
-
-		for (int i = 1; i < nums.size(); i++)
-		{
-			int maxval = INT_MIN;
-			for (int j = i-1; j >= 0; j-- )
-			{
-				if (nums[i] > nums[j])
-				{
-					if (maxval < dp[j]+1)
-					{
-						maxval = dp[j] + 1;
-						dp[i] = maxval;
-						parentTable[i] = j;
-					}
-				}
-			}
-		}
-
-		int maxval = INT_MIN;
-		int index = -1;
-		for (int i = 0; i < nums.size(); i++)
-		{
-			if (dp[i] > maxval)
-			{
-				maxval = dp[i];
-				index = i;
-			}
-		}
-
-		return make_pair(maxval, index);
-	}
-
-	void FindPath(vector<int>& nums,vector<int>& parentTable, int index)
-	{
-		if (index == -1)
-		{
-			return;
-		}
-		else
-		{
-			FindPath(nums, parentTable, parentTable[index]);
-			cout << nums[index] << ' ';
-		}
-	}
-
-	void lengthOfLISTestCase()
-	{
-		vector<int> nums{ 10, 9, 2, 5, 3, 7, 101, 18 };
-		vector<int> parentTable(nums.size(), -1);
-
-		pair<int, int> result = lengthOfLIS(nums, parentTable);
-
-		cout << "The longest regid increment sequence length is : " << result.first << endl;
-		FindPath(nums, parentTable, result.second);
-	}
-
-	// 零钱兑换[排列]
-	// 给定某一面值的纸币和可供兑换的零钱面值，求最少兑换的硬币数。
-	int coinChange(vector<int>& coins, int amount)
-	{
-		vector<int> dp(amount + 1, -1);
-		
-		dp[0] = 0;
-		for (int i = 1; i <= amount; i++)
-		{
-			int minval = INT_MAX;
-			for (int j = 0; j < coins.size(); j++)
-			{
-				int tmp = i - coins[j];
-
-				if (tmp >= 0 && dp[tmp] != -1 && minval > dp[tmp]+1)
-				{
-					minval = dp[tmp] + 1;
-					dp[i] = minval;
-				}
-			}
-		}
-
-		return dp[amount];
-
-	}
-
-
-	void coinChangeTest()
-	{
-		vector<int> coins{ 1, 2, 5 };
-		int amount = 11;
-		
-		cout << "To change " << amount << " $, " << "we at least get " << coinChange(coins, amount) << " coins" << endl;
-	}
-
-	// 零钱兑换2[组合问题]
-	// 给定一定面值的纸币和可供兑换的硬币面值，给出兑换方式的种类数
-	// 上述做法不会重复计算不同的排列。因为外层循环是遍历数组 coins 的值，内层循环是遍历不同的金额之和，在计算 dp[i] 的值时，
-	// 可以确保金额之和等于 i 的硬币面额的顺序，**由于顺序确定，因此不会重复计算不同的排列**。
-	//	3 = 1 + 1 + 1
-	//	3 = 1 + 2
-	// 硬币面额 2 不可能出现在硬币面额 1 之前，即不会重复计算 3 = 2 + 1 和 3 = 1 + 2 的情况。
-	int coinChange2(vector<int>& coins, int amount)
-	{
-		vector<int> dp(amount + 1);
-		dp[0] = 1;
-
-		// 先遍历球
-		for (int coin : coins) {
-			for (int i = coin; i <= amount; i++) {
-				dp[i] += dp[i - coin];
-			}
-		}
-		return dp[amount];
-	}
-
-
-	void coinChange2Test()
-	{
-		vector<int> coins{ 1, 2, 5 };
-		int amount = 11;
-
-		cout << "To change " << amount << " $, " << "we have " << coinChange2(coins, amount) << " different ways" << endl;
-	}
-
-
-	int main()
-	{
-		//lengthOfLISTestCase();
-		//coinChangeTest();
-		coinChange2Test();
 		return 0;
 	}
 }

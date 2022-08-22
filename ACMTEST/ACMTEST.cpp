@@ -1,6 +1,16 @@
 ﻿#include <bits/stdc++.h>
 using namespace std;
 
+
+/*
+* 为什么选择这个职位？
+* 对oppo有什么了解？
+* 对oppo手机有什么了解？
+* 自己的优缺点？
+* 
+*/
+
+
 namespace ABOUTVECTOR
 {
 	void STLResize()

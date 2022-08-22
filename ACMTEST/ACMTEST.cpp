@@ -707,7 +707,6 @@ namespace BFSEXAMPLE
 	unordered_set<state_t, stateHash> ExtendChoice(const state_t& seed, const string& end, const unordered_set<string>& dict, unordered_set<state_t, stateHash>& visited, unordered_map<string, string>& mapParent)
 	{
 		unordered_set<state_t, stateHash> result;
-
 		string strSeed = seed.word;
 
 		for (size_t i = 0; i < strSeed.length(); i++)
@@ -802,6 +801,141 @@ namespace BFSEXAMPLE
 		UnitTestWordLadder();
 		return 0;
 	}
+}
+
+namespace DIRECTEDGRAPHSEARCH
+{
+	// 我发现，在很多场合，有向图的搜索方案相较于无向图的搜索方案更加复杂，有时会让我非常捉摸不透
+	// 所有这个代码段主要来探讨如何做有向图的搜索
+	
+	// 正确选择搜索的起点非常重要，最好只从正确的起点进行一次搜索就解决问题，因为对于单一节点开始的搜索
+	// 有向图和无向图的深度优先搜索并无太大区别，但是要对整张图进行全搜索，有向图和无向图就会表现出一定的区别
+	// 比如说，对于这道题我发现的区别是：无向图只要节点之间有链接，就一定可以搜索到，所以对于多连通图来说，
+	// 多次搜索并不会遇到相同的节点；但对于有向图来说，有时候两个节点间尽管可能有链接，但常常由于连接是单向的
+	// 在多联通图中，有可能两次搜索会遇到同一节点，这时候恰当的设置全局图搜索状态就变得有些关键。
+	// 
+	// 
+	// 题目一
+	/*
+	5 5
+	.....
+	.RRD.
+	.U.DR
+	.ULL.
+	....O
+	*/
+	int n, m;
+	int endX, endY;
+	int totalNum = 0;
+
+	vector<vector<bool>> isvisted(n, vector<bool>(m, false));
+
+	vector<vector<char>> pos(n, vector<char>(m, ' '));
+
+	queue<pair<int, int>>achPos;//可达位置
+
+	// 下面的两个全局变量的设置非常重要
+	// 由于是从终点反向BFS， 因此我们需要将 directions 和 posDirections 取反，这样才能代表其可以到达当前位置
+	vector<pair<int, int>> directions = {
+		{1, 0}, {-1, 0}, {0, 1}, {0, -1}
+	};
+
+	vector<char> posDirections = { 'U','D','L','R' };
+
+	int canSuccess()
+	{
+		pair<int, int>cur;
+
+		while (!achPos.empty()) {
+
+			cur = achPos.front();
+			achPos.pop();
+
+			isvisted[cur.first][cur.second] = true;
+
+			totalNum++;
+
+			for (int i = 0; i < 4; i++) {
+
+				int xPos = cur.first + directions[i].first;
+				int yPos = cur.second + directions[i].second;
+
+				if (xPos < 0 || xPos >= n || yPos < 0 || yPos >= m) {
+					continue;
+				}
+
+				if (isvisted[xPos][yPos] == true) {
+					continue;
+				}
+
+				if (pos[xPos][yPos] == '.') {
+					achPos.push(make_pair(xPos, yPos));
+				}
+				else if (pos[xPos][yPos] == posDirections[i]) {
+					achPos.push(make_pair(xPos, yPos));
+				}
+				else {
+					continue;
+				}
+			}
+
+		}
+
+		return totalNum;
+
+	}
+
+
+	int ZOUCHUMIGONG()
+	{
+		cin >> n >> m;
+
+		isvisted.resize(n, vector<bool>(m, false));
+		pos.resize(n, vector<char>(m));
+
+		string perRow;
+
+		for (int i = 0; i < n; i++) {
+
+			cin >> perRow;
+
+			for (int j = 0; j < m; j++) {
+				pos[i][j] = perRow[j];
+
+				if (perRow[j] == 'O') {
+					endX = i;
+					endY = j;
+				}
+			}
+		}
+
+		achPos.push(make_pair(endX, endY));
+
+		int res = canSuccess();
+
+		return n * m - res;
+	}
+
+	int main()
+	{
+		int res = ZOUCHUMIGONG();
+		cout << res << endl;
+
+		return 0;
+	}
+
+
+	// 用深度优先遍历可以做吗？可以，但搜索之前要对一些数据结构做必要的初始化
+	// 以及对于 isProcessed 标志为 TRUE 节点的运用
+
+
+
+
+
+
+	// 拓扑排序怎么做？
+
+
 }
 
 namespace RECURSIVEWAY

@@ -895,18 +895,18 @@ namespace DIRECTEDGRAPHSEARCH
 	vector<vector<bool>> mem;
 	vector<vector<bool>> isprocessed;
 	vector<char> dfsDirections{ 'D', 'U', 'R', 'L' };
+	vector<vector<int>> statusIndicator;
 
 	bool DFSZOUCHU(int x, int y)
 	{
 		if (pos[x][y] == 'O' || mem[x][y] == true)
 		{
 			mem[x][y] = true;
-			isprocessed[x][y] = true;
-			isvisted[x][y] = true;
+			statusIndicator[x][y] = 1;
 			return true;
 		}
 
-		isvisted[x][y] = true;
+		statusIndicator[x][y] = 0;
 
 		bool flag = false;
 		for (int i = 0; i < directions.size(); i++)
@@ -919,14 +919,14 @@ namespace DIRECTEDGRAPHSEARCH
 				continue;
 			}
 
-			if (isvisted[newx][newy] == false)
+			if (statusIndicator[newx][newy] == -1)
 			{
 				if (dfsDirections[i] == pos[x][y] || pos[x][y] == '.')
 				{
 					flag |= DFSZOUCHU(newx, newy);
 				}
 			}
-			else if (isprocessed[newx][newy] == false)
+			else if (statusIndicator[newx][newy] == 0)
 			{
 
 			}
@@ -938,9 +938,8 @@ namespace DIRECTEDGRAPHSEARCH
 				}
 			}
 		}
-		
-		isprocessed[x][y] = true;
 
+		statusIndicator[x][y] = 1;
 		mem[x][y] = flag;
 
 		return flag;
@@ -949,33 +948,11 @@ namespace DIRECTEDGRAPHSEARCH
 	void PrintStatus()
 	{
 		cout << "********************************************" << endl;
-		for (auto& v : isvisted)
+		for (auto& v : statusIndicator)
 		{
-			for (auto b : v)
+			for (auto i : v)
 			{
-				cout << (b ? "TRUE" : "FALSE") << ' ';
-			}
-			cout << endl;
-		}
-		cout << endl;
-		cout << endl;
-		for (auto& v : isprocessed)
-		{
-			for (auto b : v)
-			{
-				cout << (b ? "TRUE" : "FALSE") << ' ';
-			}
-			cout << endl;
-		}
-
-		cout << endl;
-		cout << endl;
-
-		for (auto& v : mem)
-		{
-			for (auto b : v)
-			{
-				cout << (b ? "TRUE" : "FALSE") << ' ';
+				cout << i << ' ';
 			}
 			cout << endl;
 		}
@@ -991,6 +968,7 @@ namespace DIRECTEDGRAPHSEARCH
 		isprocessed.resize(n, vector<bool>(m, false));
 		mem.resize(n, vector<bool>(m, false));
 		pos.resize(n, vector<char>(m));
+		statusIndicator.resize(n, vector<int>(m, -1));
 
 		string perRow;
 
@@ -1021,16 +999,19 @@ namespace DIRECTEDGRAPHSEARCH
 		{
 			for (int j = 0; j < m; j++)
 			{
-				fill(isvisted.data(), isvisted.data()+m*n, false);
-				fill(isprocessed.data(), isprocessed.data()+m*n, false);
+				//PrintStatus(); // For Debug
 
-				//PrintStatus();
+				// 对于每个节点，每次都重置访问状态变量，将其状态变成未访问
+				// 但是，我们不用重置已经记忆的点，在这道题目中，我们只要重复访问mem数组中是false的点即可
+				// 因为，值为true的节点肯定满足要求，不用再次递归。
+				// 但是最聪明的办法还是选择正确的初始节点，一个正确的初始节点可以让我们少走很多弯路。
+				fill(statusIndicator.begin(), statusIndicator.end(), vector<int>(m, -1));
 				if (!DFSZOUCHU(i, j)) result++;
 				
 			}
 		}
 
-		PrintStatus();
+		//PrintStatus(); // For Debug
 
 		return result;
 	}
@@ -2779,6 +2760,7 @@ int main()
 	//RECURSIVEWAY::main();
 	//ABOUTVECTOR::main();
 	DIRECTEDGRAPHSEARCH::main();
+
 	return 0;
 
 }

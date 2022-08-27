@@ -1137,6 +1137,8 @@ namespace DAGSORT
 
 namespace RECURSIVEWAY
 {
+	// 想想递归的选择有什么？想想递归的参数是什么？想想递归的返回值是什么？用什么做记忆化？
+
 	// 二叉树的构建与递归遍历
 	struct TreeNode
 	{

@@ -1368,8 +1368,13 @@ namespace RECURSIVEWAY
 	}
 
 
+
+	// 我现在觉得这个解法是错误的，递归传递的字符串应该用引用的方式，而范围可以用 [i, j] 加以标识，
+	// 也就是说，我觉得字符串不应被递归以值传递，而应该以值传递范围[i, j]
+	// 
 	// 题目二：
 	// 给你一个字符串和一个字符串银行（包含可用字符串），问是否可以用可用字符串构造出字符串。
+
 
 	// 如果我们将最终需要构建的字符串对象记为A， 将字符串银行记为(W1, W2, W3, W4, ...)
 	// 我们递归的过程可以表示成如下形式：
@@ -1378,8 +1383,8 @@ namespace RECURSIVEWAY
 	//             A-Wi11       A-Wi12              A-Wj11           A-Wk11   A-Wk12     A-Wk13
 	// 在有些情况下，不同的节点是有可能重复的，这就有可能造成重复和不必要的递归，因此我们也需要使用记忆化的方式改善之。
 
+	// 解法之一
 	unordered_map<string, bool> canConstructMap;
-
 	bool CanConstruct(string targetStr, vector<string>& wordBank)
 	{
 		if (targetStr.empty())
@@ -1415,6 +1420,10 @@ namespace RECURSIVEWAY
 		return false;
 	}
 
+	// 更好的解法
+
+
+
 	void TestCanConstruct()
 	{
 		string str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef";
@@ -1425,6 +1434,100 @@ namespace RECURSIVEWAY
 		cout << (ret ? "True" : "False") << endl;
 
 	}
+
+
+	// 错误的递归演示：最长回文字符串
+	// 关于递归除了常规的套路以外，我们还应该注意的一点是：递归参数的传递（不仅是应该注意传递啥，还有应该区分应该
+	// 传值还是传引用）；另一点就是记忆化究竟应该记什么？
+	string result;
+	unordered_map<string, bool> mem;
+
+	bool _longestPalindrome(string s) {
+		if (s.size() == 1) return true;
+		if (s.size() == 2)
+		{
+			if (s[0] == s[1] && s.size() > result.size())
+			{
+				result = s;
+			}
+			return s[0] == s[1];
+		}
+
+		if (mem.find(s) != mem.end())
+		{
+			return mem[s];
+		}
+
+		bool ret = false;
+		if (s[0] == s.back())
+		{
+			ret = _longestPalindrome(s.substr(1, s.size() - 2));
+			if (ret)
+			{
+				if (s.size() > result.size())
+				{
+					result = s;
+				}
+			}
+		}
+
+		_longestPalindrome(s.substr(0, s.size() - 1));
+		_longestPalindrome(s.substr(1, s.size() - 1));
+
+		mem[s] = ret;
+
+		return ret;
+	}
+
+	string longestPalindrome1(string s) {
+		result = s[0];
+		_longestPalindrome(s);
+
+		return result;
+	}
+
+
+	// 比较好的递归解法
+
+	pair<int, int> ans;
+
+	void update_ans(int i, int j) {
+		if (ans.second - ans.first < j - i) {
+			ans.first = i;
+			ans.second = j;
+		}
+		// cout<<ans.first<<","<<ans.second<<endl;
+	}
+
+	int isPalindrome(string& s, int i, int j, vector<vector<int>>& m) {
+		if (i >= j) return 1;
+		if (m[i][j] != -1) return m[i][j];
+		int ret;
+		ret = (s[i] == s[j] && isPalindrome(s, i + 1, j - 1, m)) ? 1 : 0;
+		m[i][j] = ret;
+		return ret;
+	}
+
+	void dfs(string& s, int i, int j, vector<vector<int>>& m) {
+		if (i == j) return;
+		if (m[i][j] != -1) return;
+		// if (ans.second-ans.first > j-i) return;
+
+		if (isPalindrome(s, i, j, m)) {
+			update_ans(i, j);
+		}
+		dfs(s, i + 1, j, m);
+		dfs(s, i, j - 1, m);
+	}
+
+	string longestPalindrome2(string s) {
+		int n = s.size();
+		vector<vector<int>> m(n, vector<int>(n, -1));
+
+		dfs(s, 0, n - 1, m);
+		return s.substr(ans.first, ans.second - ans.first + 1);
+	}
+
 
 	// Coin Change Ⅰ : Recursive Way
 

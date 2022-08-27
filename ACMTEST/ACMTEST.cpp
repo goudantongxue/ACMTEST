@@ -1640,8 +1640,11 @@ namespace Permutations
 
 	void AllPer(vector<int>& vec)
 	{
+		// 先对需要排列的对象进行排序，这样才能使用 next_permutation 获得对象的全排列。
 		sort(vec.begin(), vec.end());
 
+		// 用 next_permutation 一定要使用 do...while 语句，这样才可以获得完整的全排列对象，
+		// 也就是包括未经 next_permutation 函数操作的对象也会被遍历到。
 		do
 		{
 			ProcessLogic(vec);
@@ -1736,7 +1739,6 @@ namespace AllSubSet
 		vector<vector<int>> result;
 
 		AllSubsets(vec, path, 0, result);
-
 
 		for (auto& v : result)
 		{

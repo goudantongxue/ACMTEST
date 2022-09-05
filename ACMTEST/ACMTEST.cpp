@@ -1543,6 +1543,57 @@ namespace RECURSIVEWAY
 
 
 
+	// 还有一种比较难的题，这个难体现在两个方面：你是否能想到使用分治的解法？以及你能否找到如何分而治之？
+	// 这是我在招商银行网络科技中看到的一道题目：给你一个字符串和字符最少出现次数k，问你如何找到最长的一串字串，使这个子串中每个字符出现
+	// 的次数都不低于k次
+	// 他解法的核心点就在于，先对每个字符出现次数进行统计，然后以字符出现次数少于k次的字符为界进行分而治之
+	int CharDividConquer(const string& s, int l, int r, int k) {
+		vector<int> cnt(26, 0);
+		for (int i = l; i <= r; i++) {
+			cnt[s[i] - 'a']++;
+		}
+
+		char split = 0;
+		for (int i = 0; i < 26; i++) {
+			if (cnt[i] < k) {
+				split = i + 'a';
+				break;
+			}
+		}
+		if (split == 0) {
+			return r - l + 1;
+		}
+
+		int i = l;
+		int ret = 0;
+		while (i <= r) {
+			while (i <= r && s[i] == split) {
+				i++;
+			}
+			if (i > r) {
+				break;
+			}
+			int start = i;
+			while (i <= r && s[i] != split) {
+				i++;
+			}
+
+			int length = dfs(s, start, i - 1, k);
+			ret = max(ret, length);
+		}
+		return ret;
+	}
+
+	void testCharDividConquer()
+	{
+		string s("ababbc");
+		int k = 2;
+		int n = s.length();
+		return dfs(s, 0, n - 1, k);
+	}
+
+
+
 	int main()
 	{
 		//testMinOps();
@@ -2839,6 +2890,79 @@ namespace ArrayTest
 	}
 }
 
+namespace OTHERS
+{
+	// 这里写一些不属于什么变成范式，但是我看一眼不会做，或者得用很高的时间复杂度才能做出来的题
+	// 其实是有一些特定的技巧在的，我觉得可能是我智力的问题，所以在这里记录一下
+	
+	// 11100011000010110
+	// 问怎么用最少的交换次数来实现全部的0首尾相连，全部的1首尾相连(尾部和头部默认相连)
+	// 思路是：
+	//         这样的首尾相连问题：
+	//		   第一步，先将字符串复制一次实现两个字符串的首尾相连，这样用一次完全从头至尾的遍历就可以遍历完所有的连续字串情况
+	//         第二步，遍历字符串，统计 1 的个数，用一的个数当作字串遍历的窗口
+	//         第三步，用窗口来遍历字符串，对每个窗口都求一个移动的次数
+
+	// 总结：对于首尾相连问题的一个Idiom就是：首尾相连 + 窗口
+
+	int MinimumMoveTimes(string& str)
+	{
+		string tmp = str + str;
+
+		int numof1 = 0;
+		for (int i = 0; i < str.size(); i++)
+		{
+			if (str[i] == '1')
+			{
+				numof1++;
+			}
+		}
+
+		int result = INT_MAX;
+		for (int i = 0; i < str.size(); i++)
+		{
+			int cnt = 0;
+			for (int j = i; j < i + numof1; j++)
+			{
+				if (tmp[j] == '1')
+				{
+					cnt++;
+				}
+			}
+
+			if (cnt < result)
+			{
+				result = cnt;
+			}
+		}
+
+		return result;
+	}
+
+	int testMinimumMoveTimes()
+	{
+
+		string testcase = "11100011000010110";
+		cout << MinimumMoveTimes(testcase);
+
+		return 0;
+	}
+
+
+	// 问题：给定一个掩码数组，由数字01组成，再给定一个整数k， 你有一次机会对连续的k个数置1，再给你你个数组，由整数组成，并且以前面的掩码数组作为掩码，
+	// 问这个数组有效位的最大和为多少？
+	// 这个问题比较显然的一种解法是以k大小的窗口进行遍历，统计每个窗口中包含0对应位置的和，显然我们的目标就是求得最大和，但复杂度稍微有点高O((n-k)*k)
+	// 这个问题中比较突出的可以优化的地方是，我们每次遍历都重复遍历的一些元素，这些元素原本只需要遍历一到两次就足够，所以说我们想到双指针的解法。
+	// 左右指针从0开始移动，右指针不断移动，代表右边0的位置，左指针不断移动，代表左边有效0的第一个位置，着这个移动过程中做一下逻辑上的运算。
+	// 这个题的思路类似于"和大于某一个数的最短数组长度"
+
+	int main()
+	{
+		testMinimumMoveTimes();
+	}
+
+}
+
 int main()
 {
 	//Permutations::main();
@@ -2869,7 +2993,9 @@ int main()
 	//ArrayTest::main();
 	//RECURSIVEWAY::main();
 	//ABOUTVECTOR::main();
-	DIRECTEDGRAPHSEARCH::main();
+	//DIRECTEDGRAPHSEARCH::main();
+	//OTHERS::main();
+
 
 	return 0;
 

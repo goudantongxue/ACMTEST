@@ -1,6 +1,108 @@
 ﻿#include <bits/stdc++.h>
 using namespace std;
 
+namespace CMATHUASGE
+{
+	// You should put this function into your tool kits
+	int main()
+	{
+		// 四舍五入
+		cout << "round test : " << endl;
+		cout << "round of 3.49 is " << round(3.49) << endl;
+		cout << "round of 3.5 is " << round(3.5) << endl;
+
+		// 向上向下取整
+		cout << "ceil floor test: " << endl;
+		cout << "ceil of 3.01 is " << ceil(3.01) << endl;
+		cout << "floor of 3.99 is " << floor(3.99) << endl;
+
+
+		// power functions test
+		cout << "Power functions test : " << endl;
+		cout << "pow(2, 3) is " << pow(2, 3) << endl;
+		cout << "sqrt(2) is " << sqrt(2) << endl;
+
+
+		// exp and log test
+		cout << "Exp and Log functions test: " << endl;
+		cout << "exp(2) is " << exp(2) << endl;
+		cout << "log(2.71828) is " << log(2.71828) << endl;
+		cout << "log10(100) is " << log10(100) << endl;
+		cout << "log2(32) is " << log2(32) << endl;
+
+		return 0;
+	}
+
+
+}
+
+namespace ISTRINGSTREAMUSAGE
+{
+	void streamTest()
+	{
+		string str("1 2 3 4 5 6");
+		istringstream iss(str);
+
+		int num;
+		// 当 iss 读到最后一个元素的时候，goodbit 会置0， eofbit 会置1
+		while (iss >> num)
+		{
+			cout << "The num read by iss is : " << num << endl;
+			cout << "Good Bits : " << (iss.good() ? "TRUE" : "FALSE") << endl;
+			cout << "EOF Bits : " << (iss.eof() ? "TRUE" : "FALSE") << endl;
+			cout << "Fail Bits : " << (iss.fail() ? "TRUE" : "FALSE") << endl;
+			cout << "Bad Bits : " << (iss.bad() ? "TRUE" : "FALSE") << endl;
+		}
+
+		// 当 iss 继续读取的话，iss的 eofbit 仍然为1，此时 failbit 会置1  
+		iss >> num;
+
+		cout << "Then we read one more, the state is : " << endl;
+		cout << "Good Bits : " << (iss.good() ? "TRUE" : "FALSE") << endl;
+		cout << "EOF Bits : " << (iss.eof() ? "TRUE" : "FALSE") << endl;
+		cout << "Fail Bits : " << (iss.fail() ? "TRUE" : "FALSE") << endl;
+		cout << "Bad Bits : " << (iss.bad() ? "TRUE" : "FALSE") << endl;
+	}
+
+
+	int compareVersion(string version1, string version2) {
+		// replace_is(iter1, iter2, pred, subvalue)
+		replace_if(version1.begin(), version1.end(), [](char c) {return c == '.'; }, ' ');
+		replace_if(version2.begin(), version2.end(), [](char c) {return c == '.'; }, ' ');
+
+		istringstream iss1(version1), iss2(version2);
+
+		int num1, num2;
+
+		// 这是我目前想到的同时处理两个 istringstream 的方法
+		while (true)
+		{
+			num1 = 0;
+			num2 = 0;
+
+			if (iss1) iss1 >> num1;
+			if (iss2) iss2 >> num2;
+
+			if (!iss1 && !iss2)
+			{
+				break;
+			}
+
+			if (num1 > num2) return 1;
+			else if (num2 > num1) return -1;
+		}
+
+		return 0;
+	}
+
+
+	int main()
+	{
+		streamTest();
+
+		return 0;
+	}
+}
 
 namespace ABOUTVECTOR
 {
@@ -2729,8 +2831,78 @@ namespace ArrayTest
 	}
 }
 
+// 一个有趣的尝试，如何让一条曲线逐渐变平坦
+namespace AVERAGEARRAYHEIGHT
+{
+	void printQ(priority_queue<int> q)
+	{
+		while (!q.empty())
+		{
+			int tmp = q.top();
+
+			cout << tmp << ' ';
+
+			q.pop();
+		}
+		cout << endl;
+	}
+
+
+	int main()
+	{
+		priority_queue<int> qheap;
+
+		for (int i = 0; i < 10; i++)
+		{
+			qheap.push(i);
+		}
+
+		printQ(qheap);
+
+
+		// 下面这段代码的基本思想是：一个个的从优先级队列里取出当前最大的元素
+		// 并减一，然后将其放到优先级队列里，这样可以逐步减少数组值大小的差距，
+		// 如果从可视化的角度来看的话，下面这段代码的目标是让数组越来越"平坦"
+		while (!qheap.empty())
+		{
+			auto tmp = qheap.top();
+			qheap.pop();
+			if (--tmp >= 0)
+			{
+				qheap.push(tmp);
+			}
+
+			printQ(qheap);
+		}
+		return 0;
+	}
+
+
+	// 附带介绍：怎么自定义 priority_queue 比较函数
+	// 按照如下方式定义属于你数据类型的 operator < 或者 operator >
+	// priority_queue 会自动选择此函数作为比较器
+	struct CMP {
+		bool operator()(const pair<char, int>& lhs, const pair<char, int>& rhs)
+		{
+			return lhs.first > rhs.first;
+		}
+	};
+
+	//priority_queue<pair<char, int>, vector<pair<char, int>>, CMP> pq;
+
+}
+
+// 几个跟上面有趣尝试相关的 leetcode 题目
+namespace LEETCODE
+{
+	// leetcode 621 任务分配器
+}
+
+
 int main()
 {
+	//CMATHUASGE::main();
+	//ISTRINGSTREAMUSAGE::main();
 	//Permutations::main();
 	//FixedLenSet::main();
 	//BFS::main();
@@ -2759,8 +2931,7 @@ int main()
 	//ArrayTest::main();
 	//RECURSIVEWAY::main();
 	//ABOUTVECTOR::main();
-	DIRECTEDGRAPHSEARCH::main();
-
+	//DIRECTEDGRAPHSEARCH::main();
 	return 0;
 
 }

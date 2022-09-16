@@ -1239,6 +1239,8 @@ namespace DAGSORT
 
 namespace RECURSIVEWAY
 {
+	// 想想递归的选择有什么？想想递归的参数是什么？想想递归的返回值是什么？用什么做记忆化？
+
 	// 二叉树的构建与递归遍历
 	struct TreeNode
 	{
@@ -1470,8 +1472,13 @@ namespace RECURSIVEWAY
 	}
 
 
+
+	// 我现在觉得这个解法是错误的，递归传递的字符串应该用引用的方式，而范围可以用 [i, j] 加以标识，
+	// 也就是说，我觉得字符串不应被递归以值传递，而应该以值传递范围[i, j]
+	// 
 	// 题目二：
 	// 给你一个字符串和一个字符串银行（包含可用字符串），问是否可以用可用字符串构造出字符串。
+
 
 	// 如果我们将最终需要构建的字符串对象记为A， 将字符串银行记为(W1, W2, W3, W4, ...)
 	// 我们递归的过程可以表示成如下形式：
@@ -1480,8 +1487,8 @@ namespace RECURSIVEWAY
 	//             A-Wi11       A-Wi12              A-Wj11           A-Wk11   A-Wk12     A-Wk13
 	// 在有些情况下，不同的节点是有可能重复的，这就有可能造成重复和不必要的递归，因此我们也需要使用记忆化的方式改善之。
 
+	// 解法之一
 	unordered_map<string, bool> canConstructMap;
-
 	bool CanConstruct(string targetStr, vector<string>& wordBank)
 	{
 		if (targetStr.empty())
@@ -1517,6 +1524,10 @@ namespace RECURSIVEWAY
 		return false;
 	}
 
+	// 更好的解法
+
+
+
 	void TestCanConstruct()
 	{
 		string str = "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeef";
@@ -1528,12 +1539,160 @@ namespace RECURSIVEWAY
 
 	}
 
+
+	// 错误的递归演示：最长回文字符串
+	// 关于递归除了常规的套路以外，我们还应该注意的一点是：递归参数的传递（不仅是应该注意传递啥，还有应该区分应该
+	// 传值还是传引用）；另一点就是记忆化究竟应该记什么？
+	// 在这个记忆化时，我将map的键选择为了string， 这个只是查找时间应该还是O(n)，应该与字符串的长度成正比
+	// 所以选择字符串当作键有些许的不合理，不如选择索引当作参数传递和键值，这样既节约大小，也节约时间
+	// 另外，如果选择索引的话，我们其实并不需要map，一个数组其实就可以搞定记录。
+	string result;
+	unordered_map<string, bool> mem;
+
+	bool _longestPalindrome(string s) {
+		if (s.size() == 1) return true;
+		if (s.size() == 2)
+		{
+			if (s[0] == s[1] && s.size() > result.size())
+			{
+				result = s;
+			}
+			return s[0] == s[1];
+		}
+
+		if (mem.find(s) != mem.end())
+		{
+			return mem[s];
+		}
+
+		bool ret = false;
+		if (s[0] == s.back())
+		{
+			ret = _longestPalindrome(s.substr(1, s.size() - 2));
+			if (ret)
+			{
+				if (s.size() > result.size())
+				{
+					result = s;
+				}
+			}
+		}
+
+		_longestPalindrome(s.substr(0, s.size() - 1));
+		_longestPalindrome(s.substr(1, s.size() - 1));
+
+		mem[s] = ret;
+
+		return ret;
+	}
+
+	string longestPalindrome1(string s) {
+		result = s[0];
+		_longestPalindrome(s);
+
+		return result;
+	}
+
+
+	// 比较好的递归解法
+
+	pair<int, int> ans;
+
+	void update_ans(int i, int j) {
+		if (ans.second - ans.first < j - i) {
+			ans.first = i;
+			ans.second = j;
+		}
+		// cout<<ans.first<<","<<ans.second<<endl;
+	}
+
+	int isPalindrome(string& s, int i, int j, vector<vector<int>>& m) {
+		if (i >= j) return 1;
+		if (m[i][j] != -1) return m[i][j];
+		int ret;
+		ret = (s[i] == s[j] && isPalindrome(s, i + 1, j - 1, m)) ? 1 : 0;
+		m[i][j] = ret;
+		return ret;
+	}
+
+	void dfs(string& s, int i, int j, vector<vector<int>>& m) {
+		if (i == j) return;
+		if (m[i][j] != -1) return;
+		// if (ans.second-ans.first > j-i) return;
+
+		if (isPalindrome(s, i, j, m)) {
+			update_ans(i, j);
+		}
+		dfs(s, i + 1, j, m);
+		dfs(s, i, j - 1, m);
+	}
+
+	string longestPalindrome2(string s) {
+		int n = s.size();
+		vector<vector<int>> m(n, vector<int>(n, -1));
+
+		dfs(s, 0, n - 1, m);
+		return s.substr(ans.first, ans.second - ans.first + 1);
+	}
+
+
 	// Coin Change Ⅰ : Recursive Way
 
 
 
 
 	// Coin Change Ⅱ : Recursive Way
+
+
+
+	// 还有一种比较难的题，这个难体现在两个方面：你是否能想到使用分治的解法？以及你能否找到如何分而治之？
+	// 这是我在招商银行网络科技中看到的一道题目：给你一个字符串和字符最少出现次数k，问你如何找到最长的一串字串，使这个子串中每个字符出现
+	// 的次数都不低于k次
+	// 他解法的核心点就在于，先对每个字符出现次数进行统计，然后以字符出现次数少于k次的字符为界进行分而治之
+	int CharDividConquer(const string& s, int l, int r, int k) {
+		vector<int> cnt(26, 0);
+		for (int i = l; i <= r; i++) {
+			cnt[s[i] - 'a']++;
+		}
+
+		char split = 0;
+		for (int i = 0; i < 26; i++) {
+			if (cnt[i] < k) {
+				split = i + 'a';
+				break;
+			}
+		}
+		if (split == 0) {
+			return r - l + 1;
+		}
+
+		int i = l;
+		int ret = 0;
+		while (i <= r) {
+			while (i <= r && s[i] == split) {
+				i++;
+			}
+			if (i > r) {
+				break;
+			}
+			int start = i;
+			while (i <= r && s[i] != split) {
+				i++;
+			}
+
+			int length = dfs(s, start, i - 1, k);
+			ret = max(ret, length);
+		}
+		return ret;
+	}
+
+	void testCharDividConquer()
+	{
+		string s("ababbc");
+		int k = 2;
+		int n = s.length();
+		return dfs(s, 0, n - 1, k);
+	}
 
 
 
@@ -1939,8 +2098,11 @@ namespace Permutations
 
 	void AllPer(vector<int>& vec)
 	{
+		// 先对需要排列的对象进行排序，这样才能使用 next_permutation 获得对象的全排列。
 		sort(vec.begin(), vec.end());
 
+		// 用 next_permutation 一定要使用 do...while 语句，这样才可以获得完整的全排列对象，
+		// 也就是包括未经 next_permutation 函数操作的对象也会被遍历到。
 		do
 		{
 			ProcessLogic(vec);
@@ -2035,7 +2197,6 @@ namespace AllSubSet
 		vector<vector<int>> result;
 
 		AllSubsets(vec, path, 0, result);
-
 
 		for (auto& v : result)
 		{
@@ -2847,62 +3008,8 @@ namespace AVERAGEARRAYHEIGHT
 		cout << endl;
 	}
 
-
-	int main()
-	{
-		priority_queue<int> qheap;
-
-		for (int i = 0; i < 10; i++)
-		{
-			qheap.push(i);
-		}
-
-		printQ(qheap);
-
-
-		// 下面这段代码的基本思想是：一个个的从优先级队列里取出当前最大的元素
-		// 并减一，然后将其放到优先级队列里，这样可以逐步减少数组值大小的差距，
-		// 如果从可视化的角度来看的话，下面这段代码的目标是让数组越来越"平坦"
-		while (!qheap.empty())
-		{
-			auto tmp = qheap.top();
-			qheap.pop();
-			if (--tmp >= 0)
-			{
-				qheap.push(tmp);
-			}
-
-			printQ(qheap);
-		}
-		return 0;
-	}
-
-
-	// 附带介绍：怎么自定义 priority_queue 比较函数
-	// 按照如下方式定义属于你数据类型的 operator < 或者 operator >
-	// priority_queue 会自动选择此函数作为比较器
-	struct CMP {
-		bool operator()(const pair<char, int>& lhs, const pair<char, int>& rhs)
-		{
-			return lhs.first > rhs.first;
-		}
-	};
-
-	//priority_queue<pair<char, int>, vector<pair<char, int>>, CMP> pq;
-
-}
-
-// 几个跟上面有趣尝试相关的 leetcode 题目
-namespace LEETCODE
-{
-	// leetcode 621 任务分配器
-}
-
-
 int main()
 {
-	//CMATHUASGE::main();
-	//ISTRINGSTREAMUSAGE::main();
 	//Permutations::main();
 	//FixedLenSet::main();
 	//BFS::main();
